@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DOYZZ AI</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: Arial, sans-serif; background: #0a0e1a; color: #fff; min-height: 100vh; padding: 20px; -webkit-tap-highlight-color: transparent; overflow-x: hidden; }
+.hide { display: none !important; }
+
+@keyframes hueShift { to { background-position: 300% 0; } }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes scalePop { 0% { opacity: 0; transform: scale(.7); } 60% { opacity: 1; transform: scale(1.05); } 100% { opacity: 1; transform: scale(1); } }
+@keyframes glowPulse { 0%,100% { opacity: .4; transform: scale(1); } 50% { opacity: .8; transform: scale(1.15); } }
+@keyframes orbFloat { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+@keyframes orbPulse { 0%,100% { box-shadow: 0 8px 30px rgba(123,92,255,.7), 0 0 0 0 rgba(168,85,247,.6); } 50% { box-shadow: 0 8px 30px rgba(123,92,255,.7), 0 0 0 16px rgba(168,85,247,0); } }
+@keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: .4; } }
+
+.center { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 90vh; text-align: center; position: relative; z-index: 1; }
+.bg-glow { position: fixed; border-radius: 50%; filter: blur(80px); pointer-events: none; z-index: 0; }
+.glow-1 { width: 300px; height: 300px; background: #7b5cff; top: -100px; left: -100px; animation: glowPulse 6s ease-in-out infinite; }
+.glow-2 { width: 340px; height: 340px; background: #ff5ce0; bottom: -120px; right: -120px; animation: glowPulse 6s ease-in-out infinite 2s; }
+.glow-3 { width: 240px; height: 240px; background: #00c2ff; top: 50%; left: 50%; transform: translate(-50%,-50%); animation: glowPulse 6s ease-in-out infinite 4s; }
+
+.home-box { position: relative; width: 100%; max-width: 360px; background: #0f1428; border: 1px solid #2a3350; border-radius: 24px; padding: 30px 24px 26px; box-shadow: 0 20px 60px rgba(0,0,0,.6); z-index: 2; animation: scalePop .6s cubic-bezier(.22,1,.36,1) both; }
+.home-logo { text-align: center; font-weight: 900; letter-spacing: 2px; font-size: 42px; background: linear-gradient(90deg, #ff3b3b, #ff8c00, #ffd700, #3ddc84, #00c2ff, #7b5cff, #ff5ce0, #ff3b3b); background-size: 300% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: hueShift 4s linear infinite; margin-bottom: 4px; }
+.sub { text-align: center; font-size: 10px; letter-spacing: 3px; color: #64748b; margin-bottom: 26px; }
+.divider { height: 1px; background: linear-gradient(90deg, transparent, #2a3350, transparent); margin-bottom: 22px; }
+
+.toggle-box { background: #0b1220; border: 1px solid #2a3350; border-radius: 14px; padding: 16px 18px; display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: 20px 0; animation: fadeUp .6s .2s both; }
+.toggle-box .txt { text-align: left; flex: 1; }
+.toggle-box .lbl { font-size: 14px; font-weight: 600; }
+.toggle-box .sbl { font-size: 11px; color: #64748b; margin-top: 2px; }
+.switch { position: relative; width: 56px; height: 30px; flex-shrink: 0; }
+.switch input { opacity: 0; width: 0; height: 0; position: absolute; }
+.slider { position: absolute; inset: 0; background: #334155; border-radius: 30px; cursor: pointer; transition: .3s; }
+.slider::before { content: ''; position: absolute; width: 22px; height: 22px; left: 4px; top: 4px; background: #fff; border-radius: 50%; transition: .3s cubic-bezier(.34,1.56,.64,1); }
+.switch input:checked + .slider { background: linear-gradient(90deg, #7b5cff, #ff5ce0); box-shadow: 0 0 16px rgba(123,92,255,.5); }
+.switch input:checked + .slider::before { transform: translateX(26px); }
+.home-info { font-size: 12px; color: #64748b; line-height: 1.6; margin-bottom: 18px; animation: fadeUp .6s .3s both; }
+
+#orb { position: fixed; right: 20px; bottom: 20px; width: 64px; height: 64px; border-radius: 50%; background: linear-gradient(135deg, #6366f1, #a855f7, #ff5ce0); display: flex; align-items: center; justify-content: center; font-size: 28px; z-index: 9999; cursor: grab; user-select: none; -webkit-user-select: none; touch-action: none; animation: orbFloat 3s ease-in-out infinite, orbPulse 2.4s ease-in-out infinite; }
+#orb.hide { display: none !important; }
+#orb.dragging { cursor: grabbing; animation: none; transform: scale(1.1); }
+
+#panel { position: fixed; right: 20px; bottom: 100px; width: 300px; max-width: calc(100vw - 40px); max-height: 80vh; overflow-y: auto; background: #0f1428; border: 1px solid #2a3350; border-radius: 18px; box-shadow: 0 20px 60px rgba(0,0,0,.8); z-index: 9998; color: #e2e8f0; animation: scalePop .4s cubic-bezier(.22,1,.36,1) both; transform-origin: bottom right; }
+#panel.hide { display: none !important; }
+#panel.dragging { animation: none; }
+.phead { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; background: linear-gradient(135deg, #6366f1, #a855f7, #ff5ce0); color: #fff; font-weight: 700; font-size: 14px; border-radius: 18px 18px 0 0; cursor: move; touch-action: none; user-select: none; }
+.phead .left { display: flex; align-items: center; gap: 8px; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: #4ade80; animation: blink 1.6s infinite; }
+.phead button { width: 30px; height: 30px; padding: 0; margin: 0 0 0 4px; border-radius: 8px; background: rgba(255,255,255,.2); border: none; color: #fff; font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; touch-action: manipulation; }
+
+.pbody { padding: 14px; }
+.pbody .lbl, #settings .lbl { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #a5b4fc; margin-bottom: 8px; margin-top: 12px; }
+.pbody .lbl:first-child, #settings .lbl:first-child { margin-top: 0; }
+.pbody select, .pbody input, #settings input { width: 100%; background: #1e293b; border: 1px solid #334155; color: #fff; padding: 10px 12px; border-radius: 10px; font-size: 13px; outline: none; margin-bottom: 4px; font-family: inherit; }
+.pills { display: flex; gap: 4px; margin-bottom: 8px; }
+.pill { flex: 1; padding: 9px 0; text-align: center; font-size: 12px; font-weight: 700; background: #1e293b; border: 1px solid #334155; border-radius: 8px; color: #94a3b8; cursor: pointer; transition: all .2s; touch-action: manipulation; }
+.pill.active { background: linear-gradient(135deg, #7b5cff, #ff5ce0); color: #fff; border-color: transparent; box-shadow: 0 4px 14px rgba(123,92,255,.5); transform: scale(1.05); }
+.btn-full { width: 100%; padding: 13px; border: none; border-radius: 10px; font-weight: 700; font-size: 13px; color: #fff; cursor: pointer; font-family: inherit; margin-bottom: 8px; touch-action: manipulation; transition: transform .15s; }
+.btn-full:active { transform: scale(.97); }
+.btn-scan { background: linear-gradient(90deg, #00c2ff, #3ddc84); }
+.btn-answer { background: linear-gradient(90deg, #7b5cff, #ff5ce0); }
+.log { background: #0b1220; border-radius: 8px; padding: 10px; font-size: 11px; color: #94a3b8; margin-top: 6px; max-height: 100px; overflow-y: auto; line-height: 1.4; }
+#settings { background: #0b1220; border-bottom: 1px solid #2a3350; padding: 12px; }
+</style>
+</head>
+<body>
+
+<div class="bg-glow glow-1"></div>
+<div class="bg-glow glow-2"></div>
+<div class="bg-glow glow-3"></div>
+
+<div class="center">
+  <div class="home-box">
+    <div class="home-logo">DOYZZ AI</div>
+    <div class="sub">FLOATING AI ASSISTANT</div>
+    <div class="divider"></div>
+    <div class="toggle-box">
+      <div class="txt">
+        <div class="lbl">Panel AI</div>
+        <div class="sbl">Munculkan orb mengambang</div>
+      </div>
+      <label class="switch">
+        <input type="checkbox" id="tgl">
+        <span class="slider"></span>
+      </label>
+    </div>
+    <div class="home-info">Nyalakan saklar untuk memunculkan orb.<br>Tap orb untuk buka panel · Drag untuk pindah.</div>
+  </div>
+</div>
+
+<div id="orb" class="hide">
+  <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" style="pointer-events:none">
+    <path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/>
+    <circle cx="12" cy="12" r="4.2" fill="white" stroke="none"/>
+  </svg>
+</div>
+
+<div id="panel" class="hide">
+  <div class="phead" id="phead">
+    <div class="left"><span class="dot"></span> DOYZZ AI</div>
+    <div>
+      <button type="button" id="btnCfg">⚙</button>
+      <button type="button" id="btnClose">✕</button>
+    </div>
+  </div>
+  <div id="settings" style="display:none;">
+    <span class="lbl">API Key</span>
+    <input type="password" id="akey" placeholder="gsk_...">
+    <span class="lbl">Endpoint</span>
+    <input type="text" id="aend" value="https://api.groq.com/openai/v1/chat/completions">
+    <span class="lbl">Model</span>
+    <input type="text" id="amod" value="llama-3.3-70b-versatile">
+    <button type="button" id="btnSave" class="btn-full" style="background:linear-gradient(135deg,#7b5cff,#ff5ce0);margin-top:8px;">Simpan</button>
+  </div>
+  <div class="pbody">
+    <span class="lbl">📚 Mapel</span>
+    <select id="mapel">
+      <option value="">— Pilih Mapel —</option>
+      <option value="PAI">PAI</option>
+      <option value="PJOK">PJOK</option>
+      <option value="B.INDO">B. Indonesia</option>
+      <option value="B.ING">B. Inggris</option>
+      <option value="MTK">Matematika</option>
+      <option value="IPA">IPA</option>
+      <option value="IPS">IPS</option>
+      <option value="BTQ">BTQ</option>
+      <option value="PP">PP</option>
+      <option value="TIK">TIK</option>
+    </select>
+    <span class="lbl">🎯 Nilai</span>
+    <div class="pills" id="pills">
+      <div class="pill" data-v="75">75</div>
+      <div class="pill" data-v="80">80</div>
+      <div class="pill" data-v="85">85</div>
+      <div class="pill" data-v="90">90</div>
+      <div class="pill" data-v="95">95</div>
+      <div class="pill active" data-v="100">100</div>
+    </div>
+    <button type="button" id="btnScan" class="btn-full btn-scan">📷 Scan Soal Ujian Live</button>
+    <button type="button" id="btnAnswer" class="btn-full btn-answer">🚀 Jawab Otomatis</button>
+    <div class="log" id="log">Pilih mapel & nilai, lalu klik Scan.</div>
+  </div>
+</div>
+
+<script>
+var _score = 100;
+var _scanning = false;
+var _scanTimer = null;
+
+function $(id) { return document.getElementById(id); }
+function log(msg) { var l = $('log'); if (l) l.textContent = msg; }
+
+function toggleOrb(cb) {
+  if (cb.checked) {
+    $('orb').classList.remove('hide');
+  } else {
+    $('orb').classList.add('hide');
+    $('panel').classList.add('hide');
+    if (_scanning) stopScan();
+  }
+}
+
+function togglePanel() { $('panel').classList.toggle('hide'); }
+
+function toggleSettings() {
+  var s = $('settings');
+  s.style.display = (s.style.display === 'none') ? 'block' : 'none';
+}
+
+function saveSettings() {
+  localStorage.setItem('k', $('akey').value.trim());
+  localStorage.setItem('e', $('aend').value.trim());
+  localStorage.setItem('m', $('amod').value.trim());
+  log('✅ Pengaturan disimpan');
+  toggleSettings();
+}
+
+function scanQuestions() {
+  var out = [], groups = {};
+  var radios = document.querySelectorAll('input[type="radio"]');
+  for (var i = 0; i < radios.length; i++) {
+    var r = radios[i];
+    if (!r.name) continue;
+    if (!groups[r.name]) groups[r.name] = [];
+    groups[r.name].push(r);
+  }
+  for (var n in groups) {
+    if (!groups.hasOwnProperty(n)) continue;
+    var inputs = groups[n];
+    if (inputs.length < 2) continue;
+    var text = '', node = inputs[0].parentElement, d = 0;
+    while (node && d < 8) {
+      var t = (node.innerText || node.textContent || '').trim();
+      if (t && t.length > 5 && t.length < 500) { text = t.split('\n')[0].substring(0, 300); break; }
+      node = node.parentElement; d++;
+    }
+    var opts = [];
+    for (var j = 0; j < inputs.length; j++) {
+      var inp = inputs[j], lt = '';
+      if (inp.id) { var lb = document.querySelector('label[for="' + inp.id + '"]'); if (lb) lt = lb.innerText.trim(); }
+      if (!lt) { var pl = inp.closest ? inp.closest('label') : null; if (pl) lt = pl.innerText.trim(); }
+      opts.push({ value: inp.value || '', text: lt || inp.value, input: inp });
+    }
+    if (text && opts.length >= 2) out.push({ text: text, options: opts });
+  }
+  return out;
+}
+
+function doScan() {
+  if (_scanning) { stopScan(); log('⏹ Scan dihentikan'); return; }
+  _scanning = true;
+  log('📡 Scan aktif...');
+  _scanTimer = setInterval(function () {
+    var qs = scanQuestions();
+    log(qs.length ? '✅ Terdeteksi ' + qs.length + ' soal!' : '⏳ Belum ada soal...');
+  }, 2000);
+}
+
+function stopScan() {
+  _scanning = false;
+  if (_scanTimer) { clearInterval(_scanTimer); _scanTimer = null; }
+}
+
+function doAnswer() {
+  var mapel = $('mapel').value;
+  if (!mapel) { log('❌ Pilih mapel dulu!'); return; }
+  var qs = scanQuestions();
+  if (!qs.length) { log('❌ Tidak ada soal'); return; }
+  var key = localStorage.getItem('k') || '';
+  if (!key) { log('❌ Isi API Key dulu di ⚙'); return; }
+  log('🤖 Menjawab ' + qs.length + ' soal...');
+  var idx = 0;
+  function next() {
+    if (idx >= qs.length) { log('🎉 Selesai!'); return; }
+    var q = qs[idx], opts = [];
+    for (var k = 0; k < q.options.length; k++) opts.push(q.options[k].text);
+    var prompt = 'Mapel: ' + mapel + '\nQ: ' + q.text + '\n\nPilihan:\n' + opts.join('\n') + '\n\nJawab JSON: {"jawaban":"A"}';
+    fetch(localStorage.getItem('e') || 'https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
+      body: JSON.stringify({
+        model: localStorage.getItem('m') || 'llama-3.3-70b-versatile',
+        temperature: 0.2,
+        messages: [
+          { role: 'system', content: 'Jawab soal PG. Balas JSON saja.' },
+          { role: 'user', content: prompt }
+        ]
+      })
+    })
+    .then(function (r) { return r.json(); })
+    .then(function (data) {
+      var raw = data.choices[0].message.content;
+      var clean = raw.replace(/```json|```/g, '').trim();
+      var h = '';
+      try { h = (JSON.parse(clean).jawaban || '').toUpperCase().trim(); }
+      catch (e) { var m = clean.match(/[A-D]/); h = m ? m[0] : ''; }
+      for (var x = 0; x < q.options.length; x++) {
+        if (q.options[x].value.toUpperCase() === h) {
+          q.options[x].input.checked = true;
+          q.options[x].input.dispatchEvent(new Event('change', { bubbles: true }));
+          log('✅ Soal ' + (idx + 1) + ' → ' + h);
+          break;
+        }
+      }
+    })
+    .catch(function (err) { log('❌ ' + err.message); })
+    .then(function () { idx++; setTimeout(next, 300); });
+  }
+  next();
+}
+
+// ============ DRAG ORB ============
+function setupDragOrb() {
+  var orb = $('orb');
+  if (!orb) return;
+  var down = false, moved = false, startX = 0, startY = 0, baseX = 0, baseY = 0;
+  function point(e) {
+    if (e.touches && e.touches.length) return e.touches[0];
+    if (e.changedTouches && e.changedTouches.length) return e.changedTouches[0];
+    return e;
+  }
+  function onStart(e) {
+    var p = point(e);
+    down = true; moved = false;
+    startX = p.clientX; startY = p.clientY;
+    var r = orb.getBoundingClientRect();
+    baseX = r.left; baseY = r.top;
+    orb.style.right = 'auto'; orb.style.bottom = 'auto';
+    orb.style.left = baseX + 'px'; orb.style.top = baseY + 'px';
+    orb.classList.add('dragging');
+    if (e.cancelable) e.preventDefault();
+  }
+  function onMove(e) {
+    if (!down) return;
+    var p = point(e);
+    var dx = p.clientX - startX, dy = p.clientY - startY;
+    if (!moved && (Math.abs(dx) > 6 || Math.abs(dy) > 6)) moved = true;
+    if (moved) {
+      orb.style.left = (baseX + dx) + 'px';
+      orb.style.top = (baseY + dy) + 'px';
+    }
+    if (e.cancelable) e.preventDefault();
+  }
+  function onEnd() {
+    if (!down) return;
+    down = false;
+    orb.classList.remove('dragging');
+    if (!moved) togglePanel();
+  }
+  orb.addEventListener('touchstart', onStart, { passive: false });
+  orb.addEventListener('touchmove', onMove, { passive: false });
+  orb.addEventListener('touchend', onEnd);
+  orb.addEventListener('touchcancel', onEnd);
+  orb.addEventListener('mousedown', onStart);
+  document.addEventListener('mousemove', onMove);
+  document.addEventListener('mouseup', onEnd);
+}
+
+// ============ DRAG PANEL ============
+function setupDragPanel() {
+  var head = $('phead');
+  var panel = $('panel');
+  if (!head || !panel) return;
+  var down = false, startX = 0, startY = 0, baseX = 0, baseY = 0;
+  function point(e) {
+    if (e.touches && e.touches.length) return e.touches[0];
+    if (e.changedTouches && e.changedTouches.length) return e.changedTouches[0];
+    return e;
+  }
+  function onStart(e) {
+    if (e.target.tagName === 'BUTTON' || (e.target.closest && e.target.closest('button'))) return;
+    var p = point(e);
+    down = true;
+    startX = p.clientX; startY = p.clientY;
+    var r = panel.getBoundingClientRect();
+    baseX = r.left; baseY = r.top;
+    panel.style.right = 'auto'; panel.style.bottom = 'auto';
+    panel.style.left = baseX + 'px'; panel.style.top = baseY + 'px';
+    panel.classList.add('dragging');
+    if (e.cancelable) e.preventDefault();
+  }
+  function onMove(e) {
+    if (!down) return;
+    var p = point(e);
+    panel.style.left = (baseX + p.clientX - startX) + 'px';
+    panel.style.top = (baseY + p.clientY - startY) + 'px';
+    if (e.cancelable) e.preventDefault();
+  }
+  function onEnd() {
+    down = false;
+    panel.classList.remove('dragging');
+  }
+  head.addEventListener('touchstart', onStart, { passive: false });
+  head.addEventListener('touchmove', onMove, { passive: false });
+  head.addEventListener('touchend', onEnd);
+  head.addEventListener('mousedown', onStart);
+  document.addEventListener('mousemove', onMove);
+  document.addEventListener('mouseup', onEnd);
+}
+
+// ============ ATTACH EVENTS ============
+function attachEvents() {
+  if ($('tgl')) $('tgl').addEventListener('change', function() { toggleOrb(this); });
+  if ($('btnCfg')) $('btnCfg').addEventListener('click', function(e) { e.stopPropagation(); toggleSettings(); });
+  if ($('btnClose')) $('btnClose').addEventListener('click', function(e) { e.stopPropagation(); togglePanel(); });
+  if ($('btnSave')) $('btnSave').addEventListener('click', saveSettings);
+  if ($('btnScan')) $('btnScan').addEventListener('click', doScan);
+  if ($('btnAnswer')) $('btnAnswer').addEventListener('click', doAnswer);
+
+  var pills = document.querySelectorAll('.pill');
+  for (var i = 0; i < pills.length; i++) {
+    (function(p) {
+      p.addEventListener('click', function() {
+        for (var j = 0; j < pills.length; j++) pills[j].classList.remove('active');
+        p.classList.add('active');
+        _score = parseInt(p.getAttribute('data-v'));
+      });
+    })(pills[i]);
+  }
+
+  if ($('akey')) $('akey').value = localStorage.getItem('k') || '';
+  if ($('aend')) $('aend').value = localStorage.getItem('e') || 'https://api.groq.com/openai/v1/chat/completions';
+  if ($('amod')) $('amod').value = localStorage.getItem('m') || 'llama-3.3-70b-versatile';
+
+  setupDragOrb();
+  setupDragPanel();
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', attachEvents);
+} else {
+  attachEvents();
+}
+</script>
+</body>
+</html>
